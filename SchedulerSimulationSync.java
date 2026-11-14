@@ -58,15 +58,61 @@ class SharedStats {
 private static final ReentrantLock contextLock = new ReentrantLock();
 private static final ReentrantLock completedLock = new ReentrantLock();
 private static final ReentrantLock serviceLock = new ReentrantLock();
+public static void incrementContextSwitch() {
+    contextLock.lock();
+    try {
+        int tmp = contextSwitchCount;
+        RaceWindow.pause();
+        contextSwitchCount = tmp + 1;
+    } finally {
+        contextLock.unlock();
+    }
+}
+public static void incrementCompletedProcess() {
+    completedLock.lock();
+    try {
+        int tmp = completedProcessCount;
+        RaceWindow.pause();
+        completedProcessCount = tmp + 1;
+    } finally {
+        completedLock.unlock();
+    }
+}
+public static void addServiceTime(int ms) {
+    serviceLock.lock();
+    try {
+        long tmp = totalServiceTime;
+        RaceWindow.pause();
+        totalServiceTime = tmp + ms;
+    } finally {
+        serviceLock.unlock();
+    }
+}
+public static int getCompletedProcessCount() {
+    completedLock.lock();
+    try {
+        return completedProcessCount;
+    } finally {
+        completedLock.unlock();
+    }
+}
+public static int getContextSwitchCount() {
+    contextLock.lock();
+    try {
+        return contextSwitchCount;
+    } finally {
+        contextLock.unlock();
+    }
+}
+public static long getTotalServiceTime() {
+    serviceLock.lock();
+    try {
+        return totalServiceTime;
+    } finally {
+        serviceLock.unlock();
+    }
+}
 
-
-    static int totalProcesses = 0;            // set once by main (never modified afterwards)
-    static int totalCPUs = 0;                 // set once by main (never modified afterwards)
-    static int contextSwitchCount = 0;        // shared counter: incremented every time a process starts a quantum
-    static int completedProcessCount = 0;     // shared counter: incremented every time a process finishes
-    static long totalServiceTime = 0;         // shared accumulator: sum of the CPU time (ms) actually executed
-    // Number of times a CPU found the ready queue empty and polled it again (busy waiting). Must be 0 after Feature 3.
-    static final java.util.concurrent.atomic.AtomicInteger busyWaitPolls = new java.util.concurrent.atomic.AtomicInteger(0);
 
     // TODO Feature 2: declare the lock(s) protecting the three shared variables above here.
     // Think about it: ONE lock for the three variables, or ONE lock PER variable? (you must justify it in MY_WORK.md)
