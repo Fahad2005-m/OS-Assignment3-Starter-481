@@ -32,11 +32,11 @@
 
 | Field | Your Answer |
 |-------|-------------|
-| **Full Name** | [Write your full name here] |
-| **Student ID** | [Write your student ID here] |
-| **University Email** | [yourid]@std.psau.edu.sa |
-| **GitHub Username** | [your-github-username] |
-| **Repository Link** | [Paste your repository link here] |
+| **Full Name** | [fahad alqabbani] |
+| **Student ID** | [445050051] |
+| **University Email** | 445050051@std.psau.edu.sa |
+| **GitHub Username** | [Fahad2005-m] |
+| **Repository Link** | [] |
  
 ---
 
@@ -132,72 +132,72 @@
 
 ## Your Development Log
 
-### Entry 1 - [Date and Time]
-**What I did**:
+### Entry 1 - [November 14, 2026, 6:30 PM]
+**What I did**:Forked the repository, set my student ID, and ran the broken starter code.
 
-**Details**:
+**Details**:I updated line 304 with my student ID. I compiled and ran the program without making any synchronization changes. The program failed as expected, triggering the ⛔ WATCHDOG error because threads were overriding each other's work. I saved the console output to use it later for Part C.
 
-**Challenges**:
+**Challenges**:Figuring out exactly where the variables were losing their increments.
 
-**Solution**:
+**Solution**:: By tracking the printed logs, I realized the context switches and completed processes were far lower than they should be due to lost updates
 
-**Time spent**:
-
----
-
-### Entry 2 - [Date and Time]
-**What I did**:
-
-**Details**:
-
-**Challenges**:
-
-**Solution**:
-
-**Time spent**:
+**Time spent**:40 minutes
 
 ---
 
-### Entry 3 - [Date and Time]
-**What I did**:
+### Entry 2 - [November 14, 2026, 6:30 PM]
+**What I did**:Implemented Feature 1 (Mutex lock on the ready queue).
 
-**Details**:
+**Details**:I added a ReentrantLock named queueLock inside the ReadyQueue class. I wrapped the critical sections in add(), poll(), processOf(), and snapshot() with queueLock.lock() and ensured they are unlocked inside a finally block to prevent deadlocks in case of exceptions.
 
-**Challenges**:
+**Challenges**:Deciding whether to use one global lock or a specific lock just for the queue.
 
-**Solution**:
+**Solution**:decided to use a dedicated lock just for the queue to allow statistics to be updated independently.
 
-**Time spent**:
-
----
-
-### Entry 4 - [Date and Time]
-**What I did**:
-
-**Details**:
-
-**Challenges**:
-
-**Solution**:
-
-**Time spent**:
+**Time spent**:45 minutes.
 
 ---
 
-### Entry 5 - [Date and Time]
-**What I did**:
+### Entry 3 - [November 14, 2026, 6:30 PM]
+**What I did**:Implemented Feature 2 (Mutex locks on shared statistics).
 
-**Details**:
+**Details**:Inside the SharedStats class, I created three separate ReentrantLock objects: one for context switches, one for completed processes, and one for service time. I wrapped the increment logic in try/finally blocks to ensure mutual exclusion.
 
-**Challenges**:
+**Challenges**:was worried that using three locks might complicate things or cause a deadlock
 
-**Solution**:
+**Solution**:Since no method acquires more than one stat lock at a time, there is no circular wait, meaning a deadlock is impossible here.
 
-**Time spent**:
+**Time spent**:50 minutes
 
 ---
 
-### Entry 6 - [Optional - Date and Time]
+### Entry 4 - [November 14, 2026, 6:30 PM]
+**What I did**:Implemented Feature 3 (Counting semaphore instead of busy waiting).
+
+**Details**:I removed the Thread.sleep(20) loop in the CpuWorker class. Instead, I added a Semaphore availableProcesses initialized to 0. I added release() in the queue's add() method and acquire() in the CPU worker's run loop.
+
+**Challenges**:The program successfully processed all tasks but then the CPUs got stuck at the end and never terminated.
+
+**Solution**:I realized that after all processes are done, the CPUs wait on acquire() forever. I will fix the shutdown logic next.
+
+**Time spent**:60 minutes
+
+---
+
+### Entry 5 - [November 14, 2026, 6:30 PM]
+**What I did**:Fixed the CPU shutdown bug and completed documentation
+
+**Details**:To gracefully shut down the CPUs, I added a condition: when the last process finishes (completed count == total), it calls availableProcesses.release(totalCPUs) to wake up all remaining sleeping threads so they can exit their loops. I then wrote the answers for Parts B and C.
+
+**Challenges**:Understanding exactly how many permits to release at the end to ensure no CPU is left behind.
+
+**Solution**:Releasing a number of permits equal to totalCPUs guarantees that every blocked thread gets a permit to wake up and see the loop termination condition.
+
+**Time spent**:minutes.
+
+---
+
+### Entry 6 - [November 14, 2026, 6:30 PM]
 **What I did**:
 
 **Details**:
@@ -214,14 +214,14 @@
 
 > 💡 **TIP:** Fill this in **last**, after all entries are written.
 
-**Total time spent on assignment**: [X hours]
+**Total time spent on assignment**: [1]
 
-**Most challenging part**:
+**Most challenging part**:Managing the semaphore permits to ensure a clean exit of all CPU threads without deadlocks.
 
-**Most interesting learning**:
+**Most interesting learning**:Seeing how significantly a Semaphore reduces CPU usage compared to an empty while loop (busy-waiting).
 
 **What I would do differently next time**:
-
+I would map out thread states on paper before writing the semaphore logic
 ---
 
 # Part B: Reflection (0.5 mark)
@@ -240,7 +240,7 @@
 
 **Your Answer:** *(5-7 sentences)*
 
-[Write your answer here.]
+[Through this assignment, I learned how "race conditions" can corrupt shared data when multiple threads perform read-modify-write operations simultaneously. I realized the importance of identifying "critical sections," such as the variables tracking completed processes or queue modifications. I used ReentrantLock to enforce "mutual exclusion," ensuring only one thread can execute a critical section at a time. I also learned the absolute necessity of using try/finally blocks to guarantee locks are released even if an exception occurs. Finally, I understood how a Semaphore prevents "busy waiting," allowing processors to sleep efficiently instead of wasting CPU cycles while waiting for tasks.]
 
 ## Question 2: What was the most challenging part of this assignment?
 
@@ -248,7 +248,7 @@
 
 **Your Answer:** *(5-7 sentences)*
 
-[Write your answer here.]
+[The most challenging part was figuring out how to shut down the CPUs gracefully after replacing the busy-waiting loop with a semaphore. Initially, my CPUs processed everything perfectly, but the program never terminated. I realized that after the last process was completed, the remaining CPU threads were permanently stuck in the acquire() method because no new processes were being added to the queue. Understanding that the last active thread needed to explicitly wake up the others was conceptually difficult. It required a shift in my thinking from managing tasks to managing the lifecycle of the threads themselves.]
 
 ## Question 3: How did you overcome the challenges you faced?
 
@@ -256,7 +256,7 @@
 
 **Your Answer:** *(5-7 sentences)*
 
-[Write your answer here.]
+[I overcame the shutdown challenge by heavily relying on System.out.println statements to trace what each thread was doing. By logging the thread states, I noticed that exactly three CPUs were asleep waiting for a semaphore permit that would never arrive. I re-read the chapter on semaphores and realized I could manually signal the blocked threads. I added a condition checking if the completed processes equaled the total processes, and if so, I called release(totalCPUs). Testing this step-by-step confirmed that the broadcast woke up all remaining threads, allowing them to exit their loops cleanly.]
 
 ## Question 4: Where can synchronization concepts be applied in real-world applications?
 
@@ -264,7 +264,7 @@
 
 **Your Answer:** *(5-7 sentences)*
 
-[Write your answer here.]
+[Synchronization concepts are critical in banking applications where multiple transactions might attempt to update a user's account balance simultaneously; a lock ensures no deposits or withdrawals are lost. They are also essential in online ticketing systems to prevent two customers from booking the exact same seat at a cinema or on a flight. A shared database relies heavily on locks to maintain data integrity during concurrent writes. Furthermore, semaphores are perfectly mirrored in real-world print queues, where multiple computers send documents (producers) and a limited number of printers (consumers) process them as they become available. In all these cases, without synchronization, data corruption and system crashes are inevitable..]
 
 ### Optional: What would you like to learn more about?
 
@@ -276,7 +276,8 @@
 
 ### Optional: Feedback on the assignment
 
-[Any comments? Was it helpful? Too easy or hard? Suggestions?]
+[A lost update occurs during the read-modify-write cycle of the shared completedProcessCount variable. For example, CPU-1 reads the current value (e.g., 5), and immediately after, RaceWindow.pause() causes a context switch. CPU-2 then reads the same value (5), increments it to 6, and writes it back; subsequently, CPU-1 resumes, increments its stored value of 5 to 6, and writes it back. Consequently, one complete increment is permanently lost. This bug happens on real machines because high-level increments (count++) translate to multiple assembly instructions, and the OS can preempt a thread right in the middle of these instructions, making the bug incredibly hard to detect since it depends on exact microsecond timing.
+]
 
 ---
 
@@ -321,7 +322,7 @@ Verification block of **my final version**:
 
 **Your Answer:** *(3-5 sentences)*
 
-[Write your answer here.]
+[ I protected the queue operations (adding, polling) using a dedicated queueLock. For the shared statistics, I chose a fine-grained approach by using one lock per variable (contextSwitchLock, completedProcessLock, serviceTimeLock) rather than a single global lock. This trade-off increases code length but significantly improves concurrency, as a CPU updating the service time will not block another CPU trying to update the completed process count. The ready queue uses a different lock to ensure that queue operations never bottleneck the statistical updates. Using lock() guarantees mutual exclusion, but since the default ReentrantLock is not fair, there is no strict guarantee of bounded waiting, meaning a thread could theoretically wait longer than others to acquire the lock.]
 
 | Critical section (variable / method) | Lock used | Why it needs protection |
 |---|---|---|
@@ -336,7 +337,7 @@ Verification block of **my final version**:
 
 **Your Answer:** *(3-5 sentences)*
 
-[Write your answer here.]
+[The busy waiting in the starter code caused the CPUs to continuously check the empty queue and sleep briefly, wasting processor resources (my starter run showed thousands of useless Busy-waiting polls). The value of my semaphore represents the number of processes currently available in the ready queue. Its initial value is 0 because the queue starts empty and there is nothing for the CPUs to consume yet. Right after the numProcesses initial add() calls, the semaphore's value becomes exactly numProcesses. The last CPU calls release(totalCPUs) at the end to artificially wake up any CPUs waiting on an empty queue; if it did not do this, those threads would remain blocked in acquire() forever (a deadlock-like state), preventing the program from terminating.]
 
 ## Question 4: Classical Problems and Deadlock
 
@@ -347,24 +348,25 @@ Verification block of **my final version**:
 **Your Answer:** *(3-5 sentences)*
 
 **Classical problem and roles**:
-[Name the problem; who is the producer, who is the consumer?]
+[This represents theThe CPUs act as consumers when they pull a process from the queue to run it, and they act as producers when they re-enqueue a process that hasn't finished its time quantum, as well as the main thread being the initial producer.]
 
 **Semaphores for a bounded queue (name and initial value)**:
-[Name the three semaphores and their initial values.]
+[We would need three semaphores: mutex initialized to 1 (for mutual exclusion), empty initialized to K (tracking available space), and full initialized to 0 (tracking available item.]
 
 **Deadlock scenario and prevention**:
-[Describe the scenario and the necessary condition you would break.]
+[A deadlock would occur if a producer thread acquired the mutex first, and then waited on the empty semaphore while the queue was full. The consumer couldn't remove an item to free space because the producer holds the mutex. We prevent this by breaking the Hold and Wait condition: we must always wait on the counting semaphore (empty or full) before acquiring the mutex lock]
 
 ## Summary
 
 **Key concepts I understood through these questions:**
-1.
-2.
-3.
+​1. How race conditions silently corrupt shared data during read-modify-write cycles and why mutual exclusion is strictly required.
+​2. The practical difference between using a ReentrantLock to protect critical sections and a counting Semaphore to manage available resources and eliminate busy-waiting.
+​3. How to identify and avoid deadlocks by breaking the "hold and wait" condition (e.g., waiting on a semaphore before acquiring a mutex).
 
 **Concepts I need to study more:**
-1.
-2.
+1.​ The internal mechanics of "fair" versus "non-fair" locks and how they exactly impact thread scheduling and bounded waiting guarantees.
+​2. Other synchronization tools like Monitors and Condition Variables, and how they compare to Semaphores in complex systems.
+
 
 ---
 
