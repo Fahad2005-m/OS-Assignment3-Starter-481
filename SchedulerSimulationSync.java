@@ -4,7 +4,9 @@ import java.util.ArrayList;
 import java.util.Map;
 import java.util.HashMap;
 import java.util.Random;
-// TODO (Feature 1 and Feature 2): import java.util.concurrent.locks.ReentrantLock;
+import java.util.concurrent.locks.ReentrantLock;
+import java.util.concurrent.Semaphore;
+
 // TODO (Feature 3):               import java.util.concurrent.Semaphore;
 
 // ANSI Color Codes for enhanced terminal output (same as Assignment 1)
@@ -52,6 +54,12 @@ class Config {
 // ⚠️ SHARED STATISTICS: updated by ALL the process threads at the same time ⚠️
 // (these are the three "features" you counted in Assignment 1: context switches, completed processes, time)
 class SharedStats {
+
+private static final ReentrantLock contextLock = new ReentrantLock();
+private static final ReentrantLock completedLock = new ReentrantLock();
+private static final ReentrantLock serviceLock = new ReentrantLock();
+
+
     static int totalProcesses = 0;            // set once by main (never modified afterwards)
     static int totalCPUs = 0;                 // set once by main (never modified afterwards)
     static int contextSwitchCount = 0;        // shared counter: incremented every time a process starts a quantum
